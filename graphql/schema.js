@@ -17,9 +17,12 @@ type AuthPayload {
   user: User!
 }
 
-type Query {
-  getUser(id: ID!): User
-}
+
+  type Query {
+    getUser(id: ID!): User
+    getUsers: [User]
+  }
+
 
 type Mutation {
   registerUser(email: String!, userName: String!, password: String!): AuthPayload
