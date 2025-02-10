@@ -14,11 +14,18 @@ const {MONGO_URI} = process.env
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  introspection: process.env.NODE_ENV !== 'production',
+  csrfPrevention: false, 
 });
 
 await server.start();
 
-app.use('/graphql', expressMiddleware(server));
+app.use(
+  "/graphql",
+  cors(),
+  express.json(),
+  expressMiddleware(server)
+);
 
 mongoose.connect(MONGO_URI)
   .then(() => {
