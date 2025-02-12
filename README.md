@@ -77,3 +77,5 @@ docker run -p 4000:4000 hakaton-backend
 - `start`: Запускає сервер.
 - `dev`: Запускає сервер в режимі розробки за допомогою `nodemon`.
 
+frontend - https://github.com/Hakaton-Error418/hackathon-frontend/
+
