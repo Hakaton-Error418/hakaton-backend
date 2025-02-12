@@ -107,7 +107,7 @@ const resolvers = {
                     throw new Error("Квест не найден");
                 }
 
-                quest.time -= task.timeInSeconds;
+                quest.time -= task.time;
 
                 await Task.findByIdAndDelete(id);
 
@@ -199,7 +199,7 @@ const resolvers = {
 
         addTask: async (
             _,
-            { questId, description, type, picture, openAnswer }
+            { questId, description, type,time, picture, openAnswer }
         ) => {
             try {
                 const quest = await Quest.findById(questId);
@@ -216,15 +216,16 @@ const resolvers = {
                     questId,
                     time,
                 });
-
+                console.log(newTask);
                 await newTask.save();
 
-                quest.time += timeInSeconds;
+                quest.time += time;
                 quest.tasks.push(newTask._id);
                 await quest.save();
 
                 return newTask;
             } catch (error) {
+              console.log(error);
                 throw new Error("Ошибка добавления задания");
             }
         },
