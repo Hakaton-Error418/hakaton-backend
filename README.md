@@ -70,7 +70,7 @@ docker build -t hakaton-backend .
 docker run -p 4000:4000 hakaton-backend
 ```
 
-Тепер сервер буде доступний за адресою `http://localhost:4000`.
+Тепер сервер буде доступний за адресою `http://localhost:5000`.
 
 ## Скрипти
 
