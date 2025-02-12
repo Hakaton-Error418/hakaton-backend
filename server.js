@@ -30,7 +30,7 @@ app.use(
 mongoose.connect(MONGO_URI)
   .then(() => {
     console.log('DB connected');
-    app.listen(process.env.PORT || 3001, () => {
+    app.listen(process.env.PORT || 5000, () => {
       console.log(`Server is running at http://localhost:5000/graphql`);
     });
   })

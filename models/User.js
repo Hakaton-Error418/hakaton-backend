@@ -13,7 +13,7 @@ const answerSchema = new mongoose.Schema({
 });
 
 const taskSchema = new mongoose.Schema({
-    description: { type: String, required: true },
+    description: { type: String },
     picture: { type: String },
     type: {
         type: String,
@@ -25,9 +25,9 @@ const taskSchema = new mongoose.Schema({
 });
 
 const questSchema = new mongoose.Schema({
-    picture: { type: String, required: true },
+    picture: { type: String },
     name: { type: String, required: true },
-    description: { type: String, required: true },
+    description: { type: String },
     rating: { type: Number, default: 0 },
     time: { type: String, default: "0" },
     tasks: [taskSchema],
