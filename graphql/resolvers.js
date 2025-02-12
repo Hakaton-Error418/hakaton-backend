@@ -1,8 +1,17 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import cloudinary from "cloudinary";
 import { Quest, User, Task } from "../models/User.js";
-
+import dotenv from 'dotenv';
+dotenv.config();
 const { JWT_SECRET } = process.env;
+
+
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const resolvers = {
     Query: {
@@ -52,7 +61,7 @@ const resolvers = {
     },
 
     Mutation: {
-        registerUser: async (_, { email, userName, password }) => {
+        registerUser: async (_, { email, userName, password, avatar }) => {
             try {
                 const existingUser = await User.findOne({ email });
                 if (existingUser) {
@@ -60,13 +69,23 @@ const resolvers = {
                 }
 
                 const hashedPassword = await bcrypt.hash(password, 10);
+
+                let avatarUrl = "";
+                if (avatar) {
+                    const uploadResponse = await cloudinary.v2.uploader.upload(avatar, {
+                        folder: "avatars",
+                    });
+                    avatarUrl = uploadResponse.secure_url;
+                }
+
                 const newUser = new User({
                     email,
                     userName,
                     password: hashedPassword,
+                    avatar: avatarUrl, // Сохраняем ссылку на Cloudinary
                 });
 
-                const token = jwt.sign({ id: newUser._id }, JWT_SECRET, {
+                const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
                     expiresIn: "7d",
                 });
 
@@ -78,6 +97,7 @@ const resolvers = {
                 throw new Error("Ошибка регистрации");
             }
         },
+          
         deleteQuest: async (_, { id }) => {
             try {
                 const quest = await Quest.findById(id);
