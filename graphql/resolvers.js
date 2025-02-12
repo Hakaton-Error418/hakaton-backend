@@ -18,7 +18,7 @@ const resolvers = {
                 const users = await User.find()
                     .populate({
                         path: "quests",
-                        populate: { path: "tasks" }, // исправлено taskIds -> tasks
+                        populate: { path: "tasks" },
                     })
                     .lean()
                     .then(users =>
@@ -35,8 +35,7 @@ const resolvers = {
                             })),
                         }))
                     );
-                    
-                console.log(users);
+
                 return users;
             } catch (error) {
                 console.log(error);
@@ -79,7 +78,73 @@ const resolvers = {
                 throw new Error("Ошибка регистрации");
             }
         },
+        deleteQuest: async (_, { id }) => {
+            try {
+                const quest = await Quest.findById(id);
+                if (!quest) {
+                    throw new Error("Квест не найден");
+                }
 
+                await Task.deleteMany({ questId: id });
+
+                await Quest.findByIdAndDelete(id);
+
+                return "Квест успешно удален";
+            } catch (error) {
+                throw new Error("Ошибка удаления квеста");
+            }
+        },
+
+        deleteTask: async (_, { id }) => {
+            try {
+                const task = await Task.findById(id);
+                if (!task) {
+                    throw new Error("Задание не найдено");
+                }
+
+                const quest = await Quest.findById(task.questId);
+                if (!quest) {
+                    throw new Error("Квест не найден");
+                }
+
+                quest.time -= task.timeInSeconds;
+
+                await Task.findByIdAndDelete(id);
+
+                quest.tasks = quest.tasks.filter(
+                    taskId => taskId.toString() !== id
+                );
+                await quest.save();
+
+                return "Задание успешно удалено";
+            } catch (error) {
+                throw new Error("Ошибка удаления задания");
+            }
+        },
+
+        deleteAnswer: async (_, { taskId, answerId }) => {
+            try {
+                const task = await Task.findById(taskId);
+                if (!task) {
+                    throw new Error("Задание не найдено");
+                }
+
+                const answerIndex = task.checkAnswer.findIndex(
+                    answer => answer._id.toString() === answerId
+                );
+
+                if (answerIndex === -1) {
+                    throw new Error("Ответ не найден");
+                }
+
+                task.checkAnswer.splice(answerIndex, 1);
+                await task.save();
+
+                return "Ответ успешно удален";
+            } catch (error) {
+                throw new Error("Ошибка удаления ответа");
+            }
+        },
         loginUser: async (_, { email, password }) => {
             try {
                 const user = await User.findOne({ email });
@@ -117,7 +182,9 @@ const resolvers = {
                     description,
                     picture,
                     tasks: [],
+                    time: 0,
                 });
+
                 await newQuest.save();
 
                 user.quests = user.quests || [];
@@ -130,7 +197,10 @@ const resolvers = {
             }
         },
 
-        addTask: async (_, { questId, description, type, picture, openAnswer }) => {
+        addTask: async (
+            _,
+            { questId, description, type, picture, openAnswer }
+        ) => {
             try {
                 const quest = await Quest.findById(questId);
                 if (!quest) {
@@ -144,11 +214,13 @@ const resolvers = {
                     openAnswer,
                     checkAnswer: [],
                     questId,
+                    time,
                 });
 
                 await newTask.save();
 
-                quest.tasks.push(newTask._id); // исправлено taskIds -> tasks
+                quest.time += timeInSeconds;
+                quest.tasks.push(newTask._id);
                 await quest.save();
 
                 return newTask;
