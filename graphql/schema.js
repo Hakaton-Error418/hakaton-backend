@@ -17,16 +17,16 @@ export const typeDefs = gql`
     description: String
     picture: String
     tasks: [Task]
-  }
+}
 
-  type Task {
+type Task {
     id: ID!
     description: String
     type: String!
     picture: String
     openAnswer: String
     checkAnswer: [Answer]
-  }
+}
 
   type Answer {
     answer: String!

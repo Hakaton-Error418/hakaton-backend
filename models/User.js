@@ -20,8 +20,14 @@ const taskSchema = new mongoose.Schema({
         enum: ["open", "multiple", "single"],
         required: true,
     },
-    openAnswer: { type: String }, 
-    checkAnswer: [answerSchema], 
+    openAnswer: { type: String },
+    checkAnswer: [
+        {
+            answer: { type: String, required: true },
+            isCorrect: { type: Boolean, required: true },
+        },
+    ],
+    questId: { type: mongoose.Schema.Types.ObjectId, ref: "Quest", required: true },
 });
 
 const questSchema = new mongoose.Schema({
@@ -30,7 +36,7 @@ const questSchema = new mongoose.Schema({
     description: { type: String },
     rating: { type: Number, default: 0 },
     time: { type: String, default: "0" },
-    tasks: [taskSchema],
+    tasks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Task" }], // исправлено с taskIds на tasks
 });
 
 const userSchema = new mongoose.Schema({

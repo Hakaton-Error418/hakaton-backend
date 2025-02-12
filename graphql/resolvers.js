@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { Quest, User } from "../models/User.js";
+import { Quest, User, Task } from "../models/User.js";
 
 const { JWT_SECRET } = process.env;
 
@@ -15,10 +15,10 @@ const resolvers = {
         },
         getUsers: async () => {
             try {
-                return await User.find()
+                const users = await User.find()
                     .populate({
                         path: "quests",
-                        populate: { path: "tasks" },
+                        populate: { path: "tasks" }, // исправлено taskIds -> tasks
                     })
                     .lean()
                     .then(users =>
@@ -35,16 +35,17 @@ const resolvers = {
                             })),
                         }))
                     );
+                    
+                console.log(users);
+                return users;
             } catch (error) {
+                console.log(error);
                 throw new Error("Ошибка получения списка пользователей");
             }
         },
         getQuests: async () => {
             try {
-                return await Quest.find().populate({
-                    path: "tasks",
-                    populate: { path: "checkAnswer" },
-                });
+                return await Quest.find().populate("tasks");
             } catch (error) {
                 throw new Error("Ошибка получения списка квестов");
             }
@@ -129,24 +130,25 @@ const resolvers = {
             }
         },
 
-        addTask: async (
-            _,
-            { questId, description, type, picture, openAnswer }
-        ) => {
+        addTask: async (_, { questId, description, type, picture, openAnswer }) => {
             try {
                 const quest = await Quest.findById(questId);
                 if (!quest) {
                     throw new Error("Квест не найден");
                 }
 
-                const newTask = {
+                const newTask = new Task({
                     description,
                     type,
                     picture,
                     openAnswer,
                     checkAnswer: [],
-                };
-                quest.tasks.push(newTask);
+                    questId,
+                });
+
+                await newTask.save();
+
+                quest.tasks.push(newTask._id); // исправлено taskIds -> tasks
                 await quest.save();
 
                 return newTask;
@@ -157,18 +159,13 @@ const resolvers = {
 
         addAnswer: async (_, { questId, taskId, answer, isCorrect }) => {
             try {
-                const quest = await Quest.findById(questId);
-                if (!quest) {
-                    throw new Error("Квест не найден");
-                }
-
-                const task = quest.tasks.id(taskId);
+                const task = await Task.findById(taskId);
                 if (!task) {
                     throw new Error("Задание не найдено");
                 }
 
                 task.checkAnswer.push({ answer, isCorrect });
-                await quest.save();
+                await task.save();
 
                 return task;
             } catch (error) {
